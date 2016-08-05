@@ -18,10 +18,12 @@ class ButtonPressSender {
 
     private final String MAC;
     private final long time;
+    private int status;
 
     public ButtonPressSender(String MAC, long time) {
         this.MAC = MAC;
         this.time = time;
+        this.status = 0;
     }
 
     public void send() throws IOException {
@@ -35,17 +37,11 @@ class ButtonPressSender {
 
         HttpClient httpClient = HttpClients.createDefault();
         HttpResponse httpResponse = httpClient.execute(httpPost);
-//        HttpEntity httpEntity = httpResponse.getEntity();
-//
-//        if (httpEntity != null) {
-//            InputStream instream = httpEntity.getContent();
-//            try {
-//                //things
-//            } finally {
-//                instream.close();
-//            }
-//        } else {
-//            return 0;
-//        }
+
+        status = httpResponse.getStatusLine().getStatusCode();
+    }
+
+    public int getStatusCode() {
+        return this.status;
     }
 }
