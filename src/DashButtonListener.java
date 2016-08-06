@@ -40,12 +40,16 @@ class DashButtonListener {
         String deviceName = properties.getProperty("device");
 
         if (url == null) {
-            System.err.println("*** config.properties must contain a 'url' property (even if it's empty)");
-            System.err.println("*** button presses will POSTed to this url as 'm' (MAC address) and 't' (time)");
+            System.out.println("*** config.properties must contain a 'url' property (even if it's empty)");
+            System.out.println("*** button presses will POSTed to this url as 'm' (MAC address) and 't' (time)");
             return;
         }
 
-        System.out.printf("POSTing presses to: %s\n", url);
+        if (url.isEmpty()) {
+            System.out.println("No POST URL specified. Presses will be discarded.");
+        } else {
+            System.out.printf("POSTing presses to: %s\n", url);
+        }
         System.out.println();
 
         // All network devices will populate this list
@@ -60,7 +64,7 @@ class DashButtonListener {
 
         int result = Pcap.findAllDevs(networkDevices, errorLog);
         if (result == Pcap.NOT_OK || networkDevices.isEmpty()) {
-            System.err.printf("Error finding network devices:\n%s", errorLog.toString());
+            System.out.printf("Error finding network devices:\n%s", errorLog.toString());
             return;
         }
 
@@ -88,7 +92,7 @@ class DashButtonListener {
         Pcap pcap = Pcap.openLive(deviceName, 128, Pcap.MODE_PROMISCUOUS, 1000, errorLog);
 
         if (pcap == null) {
-            System.err.printf("Error while opening device for capture: %s", errorLog.toString());
+            System.out.printf("Error while opening device for capture: %s", errorLog.toString());
             return;
         }
 
@@ -140,6 +144,11 @@ class DashButtonListener {
                         }
                     }
 
+                    if (url.isEmpty()) {
+                        System.out.println("No POST URL specified in config.properties");
+                        discard = true;
+                    }
+
                     if (!discard) {
                         System.out.println("Sending button press to web server for processing.");
 
@@ -149,7 +158,6 @@ class DashButtonListener {
                             buttonPressSender.send();
                         } catch (IOException ioe) {
                             System.out.printf("Failed to send button press from %s to server\n", sourceHeaderAddress);
-                            ioe.printStackTrace();
                         }
 
                         if (buttonPressSender.getStatusCode() != 200) {
@@ -157,7 +165,7 @@ class DashButtonListener {
                                     buttonPressSender.getStatusCode());
                         }
                     } else {
-                        System.out.println("This request will be discarded.");
+                        System.out.println("This press will be discarded.");
                     }
                     System.out.println();
                 }
