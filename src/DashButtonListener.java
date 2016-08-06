@@ -9,12 +9,44 @@ import org.jnetpcap.packet.PcapPacketHandler;
 import org.jnetpcap.packet.format.FormatUtils;
 import org.jnetpcap.protocol.network.Arp;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 class DashButtonListener {
 
+
     public static void main(String[] args) {
+
+        Properties properties = new Properties();
+        InputStream inputStream = null;
+
+        try {
+            inputStream = new FileInputStream("config.properties");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        try {
+            properties.load(inputStream);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        String url = properties.getProperty("url");
+        String deviceName = properties.getProperty("device");
+
+        if (url == null) {
+            System.err.println("*** config.properties must contain a 'url' property (even if it's empty)");
+            System.err.println("*** button presses will POSTed to this url as 'm' (MAC address) and 't' (time)");
+            return;
+        }
+
+        System.out.printf("POSTing presses to: %s\n", url);
+        System.out.println();
 
         // All network devices will populate this list
         List<PcapIf> networkDevices = new ArrayList<>();
@@ -32,10 +64,28 @@ class DashButtonListener {
             return;
         }
 
+        System.out.printf("Found %d network devices:\n", networkDevices.size());
+        for (int i = 0; i < networkDevices.size(); i++) {
+            System.out.printf("%s\n", networkDevices.get(i).getName());
+        }
+        System.out.println();
+
         PcapIf device = networkDevices.get(0);
 
+        if (deviceName == null || deviceName.isEmpty()) {
+            deviceName = device.getName();
+            System.out.println("'device' property not specified in config.properties. Defaulting to first device.");
+            System.out.println();
+        }
+
+        System.out.printf("Listening for packets on: %s\n", deviceName);
+        System.out.println();
+        System.out.println("*** If this is not the correct device (or you're not seeing button presses), try setting");
+        System.out.println("*** the 'device' property in config.properties to one of the devices listed above.");
+        System.out.println();
+
         // The important bits of ARP packets are typically available in the first 128 bytes, so truncate to that
-        Pcap pcap = Pcap.openLive(device.getName(), 128, Pcap.MODE_PROMISCUOUS, 1000, errorLog);
+        Pcap pcap = Pcap.openLive(deviceName, 128, Pcap.MODE_PROMISCUOUS, 1000, errorLog);
 
         if (pcap == null) {
             System.err.printf("Error while opening device for capture: %s", errorLog.toString());
@@ -93,7 +143,7 @@ class DashButtonListener {
                     if (!discard) {
                         System.out.println("Sending button press to web server for processing.");
 
-                        ButtonPressSender buttonPressSender = new ButtonPressSender(sourceHeaderAddress, now.getTime());
+                        ButtonPressSender buttonPressSender = new ButtonPressSender(url, sourceHeaderAddress, now.getTime());
 
                         try {
                             buttonPressSender.send();

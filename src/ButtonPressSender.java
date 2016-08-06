@@ -16,11 +16,13 @@ import java.util.List;
  */
 class ButtonPressSender {
 
+    private final String URL;
     private final String MAC;
     private final long time;
     private int status;
 
-    public ButtonPressSender(String MAC, long time) {
+    public ButtonPressSender(String URL, String MAC, long time) {
+        this.URL = URL;
         this.MAC = MAC;
         this.time = time;
         this.status = 0;
@@ -32,7 +34,7 @@ class ButtonPressSender {
         payload.add(new BasicNameValuePair("t", time + ""));
         UrlEncodedFormEntity entity = new UrlEncodedFormEntity(payload, Consts.UTF_8);
         entity.setContentType("application/x-www-form-urlencoded");
-        HttpPost httpPost = new HttpPost("https://script.google.com/macros/s/AKfycbyoyDb8hBV3QTNdeNgW0tdLf_T5JtopGjC0OKtHo3Be-ck6sck/exec");
+        HttpPost httpPost = new HttpPost(URL);
         httpPost.setEntity(entity);
 
         HttpClient httpClient = HttpClients.createDefault();
