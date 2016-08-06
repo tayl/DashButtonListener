@@ -1,6 +1,8 @@
-# DashButtonListener
+# Dash Button Listener
 
-A simple program designed to listen for network requests made by Amazon Dash Buttons. When a request is heard, the MAC address of the device and current time is passed to an outside server to handle the request by performing the action designated for the button.
+A simple Java program for Windows designed to listen for network requests made by Amazon Dash Buttons. When a request is heard, the MAC address of the device and current time is passed to an outside server to handle the request by performing the action designated for that button.
+
+The latest release can be found [here](https://github.com/tayl/DashButtonListener/releases)
 
 
 ## Libraries
